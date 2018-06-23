@@ -11,9 +11,13 @@ class SE3Comp(nn.Module):
         Tg: <Torch.tensor> SE(3) R^7 (x, y, z, ww, wx, wy, wz)
             Tg = torch.zeros(batchSize, 7, 1)
         xi: <Torch.tensor> se(3) R^6 (rho1, rho2, rho3, omega_x, omega_y, omega_z)
-        
+            xi_vec = torch.zeros(batchSize, 6, 1)
         return Composed SE(3) in R^7 format
         """
+        assert isinstance(Tg, type(torch.zeros(1))),'Tg with wrong datatype, should be torch.Tensor'
+        assert isinstance(xi, type(torch.zeros(1))),'Tg with wrong datatype, should be torch.Tensor'
+
+        
         rho   = xi[:, 0:3]
         omega = xi[:, 3:6] #torch.Size([batchSize, 3, 1])
         batchSize = xi.size()[0]
