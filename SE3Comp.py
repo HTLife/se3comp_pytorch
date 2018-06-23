@@ -1,21 +1,24 @@
+import torch 
 import torch.nn as nn
 
 class SE3Comp(nn.Module):
     def __init__(self):
         super(SE3Comp, self).__init__()
-        pass
+        self.threshold = 1e-12
     
     def forward(self, Tg, xi):
         """
         Tg: <Torch.tensor> SE(3) R^7 (x, y, z, ww, wx, wy, wz)
+            Tg = torch.zeros(batchSize, 7, 1)
         xi: <Torch.tensor> se(3) R^6 (rho1, rho2, rho3, omega_x, omega_y, omega_z)
         
         return Composed SE(3) in R^7 format
         """
         rho   = xi[:, 0:3]
         omega = xi[:, 3:6] #torch.Size([batchSize, 3, 1])
+        batchSize = xi.size()[0]
         
-        R, V = so3_RV(torch.squeeze(omega))
+        R, V = self.so3_RV(torch.squeeze(omega))
         Txi = torch.zeros(batchSize,4,4)
         Txi[:, 0:3, 0:3] = R
         Txi[:, 3,3] = 1.0
@@ -23,15 +26,65 @@ class SE3Comp(nn.Module):
         
         Tg_matrix = torch.zeros(batchSize,4,4)
         q = Tg[:, 3:7]
-        Tg_matrix[:, 0:3, 0:3] = q_to_Matrix(q)
-        Tg_matrix[:, 0, 3] = Tg[:, 0]
-        Tg_matrix[:, 1, 3] = Tg[:, 1]
-        Tg_matrix[:, 2, 3] = Tg[:, 2]
+        Tg_matrix[:, 0:3, 0:3] = self.q_to_Matrix(q)
+        Tg_matrix[:, 0, 3] = torch.squeeze(Tg[:, 0])
+        Tg_matrix[:, 1, 3] = torch.squeeze(Tg[:, 1])
+        Tg_matrix[:, 2, 3] = torch.squeeze(Tg[:, 2])
         
-        T_combine = torch.bmm(Txi, Tg_matrix)
-        return 
+        T_combine_M = torch.bmm(Txi, Tg_matrix)
+        
+        #T_combine_R7 = self.MtoR7(T_combine_M)
+        
+        return self.batchMtoR7(T_combine_M)
     
-    def q_to_Matrix(q):
+    def batchMtoR7(self,M):
+        batchSize = M.size()[0]
+        cat = None
+        for i in range(batchSize):
+            a = self.MtoR7(M[i])
+            if i == 0:
+                cat = torch.unsqueeze(a, dim=0)
+                continue
+            cat = torch.cat([cat,torch.unsqueeze(a, dim=0)])
+            
+        return cat
+    
+    def MtoR7(self,M):#no batch
+        R7 = torch.zeros(7,1)
+        #print(M[0,3].size())
+        #print(R7[0].size())
+        R7[0] = M[ 0, 3] # [2] to [2, 1]
+        R7[1] = M[ 1, 3] # [2] to [2, 1]
+        R7[2] = M[ 2, 3] # [2] to [2, 1]
+        #https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
+        t = 0
+        if M[2, 2] < 0:
+            if M[0, 0] > M[1, 1]:
+                t = 1 + M[0, 0] - M[1, 1] - M[2, 2]
+                q = [M[1, 2]-M[2, 1],  t,  M[0, 1]+M[1, 0],  M[2, 0]+M[0, 2]]
+            else:
+                t = 1 - M[0, 0] + M[1, 1] - M[2, 2]
+                q = [M[0, 2]-M[2, 0],  M[0, 1]+M[1, 0],  t,  M[1, 2]+M[2, 1]]
+        else:
+            if M[0, 0] < -M[1, 1]:
+                t = 1 - M[0, 0] - M[1, 1] + M[2, 2]
+                q = [M[0, 1]-M[1, 0],  M[2, 0]+M[0, 2],  M[1, 2]+M[2, 1],  t]
+            else:
+                t = 1 + M[0, 0] + M[1, 1] + M[2, 2]
+                q = [t,  M[1, 2]-M[2, 1],  M[2, 0]-M[0, 2],  M[0, 1]-M[1, 0]]
+        R7[3], R7[4], R7[5], R7[6] = q
+        R7[3] *= 0.5 / torch.sqrt(t)
+        R7[4] *= 0.5 / torch.sqrt(t)
+        R7[5] *= 0.5 / torch.sqrt(t)
+        R7[6] *= 0.5 / torch.sqrt(t)
+        if R7[3] < 0:
+            R7[3] *= -1
+            R7[4] *= -1
+            R7[5] *= -1
+            R7[6] *= -1
+        return R7
+        
+    def q_to_Matrix(self, q):
         qw = q[:, 0]
         qx = q[:, 1]
         qy = q[:, 2]
@@ -52,7 +105,7 @@ class SE3Comp(nn.Module):
     
         return M
     
-    def so3_RV(omega):
+    def so3_RV(self, omega):
         """
         (3-tuple)
         omega = torch.zeros(batchSize, 3)
@@ -100,7 +153,7 @@ class SE3Comp(nn.Module):
         one_minus_cos_div_theta_sqr_tensor    = torch.ones(omega_skew.size())
         theta_minus_sin_div_theta_cube_tensor = torch.ones(omega_skew.size())
         for b in range(batchSize):
-            if theta_sqr[b] > 1e-12:#self.threshold:
+            if theta_sqr[b] > self.threshold:
                 sin_theta_div_theta_tensor[b] = sin_theta_div_theta[b]
                 one_minus_cos_div_theta_sqr_tensor[b] = one_minus_cos_div_theta_sqr[b]
                 theta_minus_sin_div_theta_cube_tensor[b] = theta_minus_sin_div_theta_cube[b]
@@ -127,31 +180,7 @@ class SE3Comp(nn.Module):
             torch.mul(theta_minus_sin_div_theta_cube_tensor, omega_skew_sqr)
         return completeTransformation, V
     
-    def expo(xi):
-        """ exponential map """
-        upsilon = v[0:3, :]
-        omega = sophus.Vector3(v[3], v[4], v[5])
-        so3 = sophus.So3.exp(omega)
-        Omega = sophus.So3.hat(omega)
-        Omega_sq = Omega * Omega
-        theta = sympy.sqrt(sophus.squared_norm(omega))
-        V = (sympy.Matrix.eye(3) +
-             (1 - sympy.cos(theta)) / (theta**2) * Omega +
-             (theta - sympy.sin(theta)) / (theta**3) * Omega_sq)
-        return Se3(so3, V * upsilon)
-    
-    def hat(v):
-        upsilon = sophus.Vector3(v[0], v[1], v[2])
-        omega = sophus.Vector3(v[3], v[4], v[5])
-        return so3hat(omega).\
-            row_join(upsilon).\
-            col_join(sympy.Matrix.zeros(1, 4))
-            
-    def so3hat(o):
-        return sympy.Matrix([[0, -o[2], o[1]],
-                             [o[2], 0, -o[0]],
-                             [-o[1], o[0], 0]])            
-            
+
             
             
             
