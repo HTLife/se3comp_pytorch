@@ -25,15 +25,13 @@ class SE3Comp(nn.Module):
         Txi[:, 0:3, 3] = torch.squeeze(torch.bmm(V, rho))
         
         Tg_matrix = torch.zeros(batchSize,4,4)
+        Tg_matrix[:, 3, 3] = 1.0
         q = Tg[:, 3:7]
         Tg_matrix[:, 0:3, 0:3] = self.q_to_Matrix(q)
         Tg_matrix[:, 0, 3] = torch.squeeze(Tg[:, 0])
         Tg_matrix[:, 1, 3] = torch.squeeze(Tg[:, 1])
         Tg_matrix[:, 2, 3] = torch.squeeze(Tg[:, 2])
-        
         T_combine_M = torch.bmm(Txi, Tg_matrix)
-        print(T_combine_M)
-        #T_combine_R7 = self.MtoR7(T_combine_M)
         
         return self.batchMtoR7(T_combine_M)
     
