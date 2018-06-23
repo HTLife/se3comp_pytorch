@@ -32,7 +32,7 @@ class SE3Comp(nn.Module):
         Tg_matrix[:, 2, 3] = torch.squeeze(Tg[:, 2])
         
         T_combine_M = torch.bmm(Txi, Tg_matrix)
-        
+        print(T_combine_M)
         #T_combine_R7 = self.MtoR7(T_combine_M)
         
         return self.batchMtoR7(T_combine_M)
@@ -59,19 +59,19 @@ class SE3Comp(nn.Module):
         #https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
         t = 0
         if M[2, 2] < 0:
-            if M[0, 0] > M[1, 1]:
+            if M[0, 0] > M[1, 1]:#
                 t = 1 + M[0, 0] - M[1, 1] - M[2, 2]
-                q = [M[1, 2]-M[2, 1],  t,  M[0, 1]+M[1, 0],  M[2, 0]+M[0, 2]]
-            else:
+                q = [M[2, 1]-M[1, 2],  t,  M[0, 1]+M[1, 0],  M[2, 0]+M[0, 2]]
+            else:#
                 t = 1 - M[0, 0] + M[1, 1] - M[2, 2]
                 q = [M[0, 2]-M[2, 0],  M[0, 1]+M[1, 0],  t,  M[1, 2]+M[2, 1]]
         else:
-            if M[0, 0] < -M[1, 1]:
+            if M[0, 0] < -M[1, 1]:#
                 t = 1 - M[0, 0] - M[1, 1] + M[2, 2]
-                q = [M[0, 1]-M[1, 0],  M[2, 0]+M[0, 2],  M[1, 2]+M[2, 1],  t]
-            else:
+                q = [M[1, 0]-M[0, 1],  M[2, 0]+M[0, 2],  M[1, 2]+M[2, 1],  t]
+            else:#
                 t = 1 + M[0, 0] + M[1, 1] + M[2, 2]
-                q = [t,  M[1, 2]-M[2, 1],  M[2, 0]-M[0, 2],  M[0, 1]-M[1, 0]]
+                q = [t,  M[2, 1]-M[1, 2],  M[0, 2]-M[2, 0],  M[1, 0]-M[0, 1]]
         R7[3], R7[4], R7[5], R7[6] = q
         R7[3] *= 0.5 / torch.sqrt(t)
         R7[4] *= 0.5 / torch.sqrt(t)
