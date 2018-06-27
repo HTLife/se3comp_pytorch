@@ -24,6 +24,6 @@ In [VINet](https://arxiv.org/abs/1701.08376)[1], the author described a importan
 
 
 ## Reference
-[1] R.Clark, S.Wang, H.Wen, A.Markham, andN.Trigoni, “VINet: Visual-Inertial Odometry as a Sequence-to-Sequence Learning Problem,” pp. 3995–4001, 2017.
-[2] S.Wang, R.Clark, H.Wen, andN.Trigoni, “End-to-end, sequence-to-sequence probabilistic visual odometry through deep neural networks,” Int. J. Rob. Res., 2017.
-[3] A.Handa, M.Bloesch, V.Pătrăucean, S.Stent, J.McCormac, andA.Davison, “Gvnn: Neural network library for geometric computer vision,” Lect. Notes Comput. Sci. (including Subser. Lect. Notes Artif. Intell. Lect. Notes Bioinformatics), vol. 9915 LNCS, pp. 67–82, 2016.
+ * [1] R.Clark, S.Wang, H.Wen, A.Markham, andN.Trigoni, “VINet: Visual-Inertial Odometry as a Sequence-to-Sequence Learning Problem,” pp. 3995–4001, 2017.
+ * [2] S.Wang, R.Clark, H.Wen, andN.Trigoni, “End-to-end, sequence-to-sequence probabilistic visual odometry through deep neural networks,” Int. J. Rob. Res., 2017.
+ * [3] A.Handa, M.Bloesch, V.Pătrăucean, S.Stent, J.McCormac, andA.Davison, “Gvnn: Neural network library for geometric computer vision,” Lect. Notes Comput. Sci. (including Subser. Lect. Notes Artif. Intell. Lect. Notes Bioinformatics), vol. 9915 LNCS, pp. 67–82, 2016.
