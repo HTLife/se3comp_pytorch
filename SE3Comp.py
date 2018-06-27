@@ -4,7 +4,8 @@ import torch.nn as nn
 class SE3Comp(nn.Module):
     def __init__(self):
         super(SE3Comp, self).__init__()
-        self.threshold = 1e-12
+        self.threshold_square = 1e-1
+        self.threshold_cube = 1e-1
     
     def forward(self, Tg, xi):
         """
@@ -154,15 +155,33 @@ class SE3Comp(nn.Module):
         sin_theta_div_theta_tensor            = torch.ones(omega_skew.size())
         one_minus_cos_div_theta_sqr_tensor    = torch.ones(omega_skew.size())
         theta_minus_sin_div_theta_cube_tensor = torch.ones(omega_skew.size())
+        
+        # sin_theta_div_theta do not need linear approximation
+        sin_theta_div_theta_tensor = sin_theta_div_theta
         for b in range(batchSize):
-            if theta_sqr[b] > self.threshold:
-                sin_theta_div_theta_tensor[b] = sin_theta_div_theta[b]
+            if theta_sqr[b] > self.threshold_square:
                 one_minus_cos_div_theta_sqr_tensor[b] = one_minus_cos_div_theta_sqr[b]
+            elif theta_sqr[b] < 1e-6:
+                one_minus_cos_div_theta_sqr_tensor[b] = 0.5
+            else:#Taylor expansion
+                c = 1.0 / 2.0
+                c += theta[b]**(4*1) / 720.0#np.math.factorial(6) 
+                c += theta[b]**(4*2) / 3628800.0#np.math.factorial(6+4) 
+                c -= theta[b]**(2) / 24.0#np.math.factorial(4) 
+                c -= theta[b]**(2 + 4) / 40320.0#np.math.factorial(4+4) 
+                one_minus_cos_div_theta_sqr_tensor[b] = c
+                
+            if theta_cube[b] > self.threshold_cube:
                 theta_minus_sin_div_theta_cube_tensor[b] = theta_minus_sin_div_theta_cube[b]
-            else:
-                sin_theta_div_theta_tensor[b]  = 1
-                one_minus_cos_div_theta_sqr_tensor[b] = 0
+            elif theta_sqr[b] < 1e-6:
                 theta_minus_sin_div_theta_cube_tensor[b] = 1.0 / 6.0
+            else:#Taylor expansion
+                s = 1.0 / 6.0
+                s += theta[b]**(4*1) / 5040.0
+                s += theta[b]**(4*2) / 39916800.0
+                s -= theta[b]**(2) / 120.0
+                s -= theta[b]**(2 + 4) / 362880.0
+                theta_minus_sin_div_theta_cube_tensor[b] = s
 
         completeTransformation = torch.zeros(batchSize,3,3)
 
