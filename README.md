@@ -20,7 +20,7 @@ T_composed = Txi (dot) Tg_matrix
 
 ## Some implementation story
 
-In [VINet](https://arxiv.org/abs/1701.08376)[1], the author described a important structure called **SE3 composition layer** (Figure.2 in VINet).  However, they do not describe this structure in detail.  I found some related statement in [2](page.9)(which is a journel paper from the same advisor).  gvnn[3] might be their reference of implemneting SE3 composition layer.
+In [VINet](https://arxiv.org/abs/1701.08376)[1], the author described a important structure called **SE3 composition layer** (Figure.2 in VINet).  However, they do not describe this structure in detail.  I found some related statement in [2] page.9(which is a journel paper from the same advisor).  gvnn[3] might be their reference of implemneting SE3 composition layer.
 
 
 ## Reference
