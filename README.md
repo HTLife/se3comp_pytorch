@@ -1,6 +1,19 @@
 This PyTorch SE3 composition layer implementation is being inspired by [Torch gvnn ](https://github.com/ankurhanda/gvnn).  
 Thanks for the advice from Ankur Handa @ankurhanda (https://github.com/ankurhanda)(The author of gvnn).
 
+Please cite
+```
+@misc{JackyLiuSE3comp18,
+  author = {Tse-An (Jacky) Liu},
+  doi = {10.5281/zenodo.1304166},
+  title = {se3comp pytorch},
+  year = {2018},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/HTLife/se3comp_pytorch}}
+}
+```
+
 ## SE3 composition layer
 
 Purpose: Compose **global pose Tg** with **related pose xi**
