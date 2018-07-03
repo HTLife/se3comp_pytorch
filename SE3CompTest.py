@@ -3,9 +3,11 @@ import torch
 import numpy as np
 from SE3Comp import *
 
-batchSize = 2
+batchSize = 1
 Tg = torch.zeros(batchSize, 7, 1)
 xi_vec = torch.zeros(batchSize, 6, 1)
+
+
 
 Tg[0, 0] = 1
 Tg[0, 1] = 2

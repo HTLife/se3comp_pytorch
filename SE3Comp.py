@@ -22,8 +22,7 @@ class SE3Comp(nn.Module):
         rho   = xi[:, 0:3]
         omega = xi[:, 3:6] #torch.Size([batchSize, 3, 1])
         batchSize = xi.size()[0]
-        
-        R, V = self.so3_RV(torch.squeeze(omega))
+        R, V = self.so3_RV(torch.squeeze(omega, dim=2))
         Txi = torch.zeros(batchSize,4,4)
         Txi[:, 0:3, 0:3] = R
         Txi[:, 3,3] = 1.0
@@ -54,8 +53,7 @@ class SE3Comp(nn.Module):
     
     def MtoR7(self,M):#no batch
         R7 = torch.zeros(7,1)
-        #print(M[0,3].size())
-        #print(R7[0].size())
+
         R7[0] = M[ 0, 3] # [2] to [2, 1]
         R7[1] = M[ 1, 3] # [2] to [2, 1]
         R7[2] = M[ 2, 3] # [2] to [2, 1]
@@ -159,7 +157,7 @@ class SE3Comp(nn.Module):
         
         # sin_theta_div_theta do not need linear approximation
         sin_theta_div_theta_tensor = sin_theta_div_theta
-        #print(sin_theta_div_theta_tensor)
+        
         for b in range(batchSize):
             if theta_sqr[b] > self.threshold_square:
                 one_minus_cos_div_theta_sqr_tensor[b] = one_minus_cos_div_theta_sqr[b]
